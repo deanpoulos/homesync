@@ -10,6 +10,8 @@ on the same network.
 
 # Usage
 
+``` console
+$ homesync --help
 Usage: homesync [ --help | -h ] [ --list -l ] [ --menu | -m ]
                 [ --src | -s ] source_path_to_file
                 [ --dst | -d ] destination_path
@@ -24,6 +26,7 @@ Options:
    --menu -m  Select remote IP from menu of all available IPs.
    --src -s   Path to directory from which files will be synced.
    --dst -d   Path from directory to which files will be synced.
+```
 
 # Example
 
@@ -33,6 +36,7 @@ Searching LAN for open ssh ports... done!
 
 192.168.0.74
 192.168.0.51
+192.168.0.22
 
 $ mkdir -p some_dir/some_other_dir
 $ homesync -ms some_dir -d ~/ push
