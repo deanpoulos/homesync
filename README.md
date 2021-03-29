@@ -98,10 +98,8 @@ Then, whenever an update is pushed to homesync, it can be updated simply by a
 git pull in the src/homesync directory.
 
 ``` console
-$ if [ ! -d ~/src ]; then mkdir ~/src; fi  && cd ~/src
-$ git clone https://github.com/deanpoulos/homesync.git
-$ cd homesync
-$ chmod +x homesync
-$ cd /usr/local/bin
-$ sudo ln -sf ~/src/homesync/homesync
+$ if [ ! -d ~/src ]; then mkdir ~/src; fi
+$ git clone https://github.com/deanpoulos/homesync.git ~/src
+$ sudo ln -sf ~/src/homesync/homesync /usr/local/bin/homesync
+$ sudo chmod +x /usr/local/bin/homesync
 ```
