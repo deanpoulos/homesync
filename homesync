@@ -1,0 +1,119 @@
+#!/bin/bash
+
+usage() {
+	echo -e "homesync version v0.0.1"
+	echo -e "Copyright (C) 2021 by Dean Poulos."
+	echo -e "Website: deanpoulos.com"
+	echo -e ""
+	echo -e "A tool for syncing specified directory structures between machines "
+	echo -e "on the same network."
+	echo -e ""
+	echo -e "Usage: homesync [ --help | -h ] [ --list -l ] [ --menu | -m ]"
+	echo -e "                [ --src | -s ] source_path_to_file"
+	echo -e "                [ --dst | -d ] destination_path"
+	echo -e ""
+	echo -e "   pull     Pull changes from remote machine on LAN to local."
+	echo -e "   push     Push changes from local machine to remote on LAN."
+	echo -e ""
+	echo -e "Options:"
+	echo -e ""
+	echo -e "   --help -h  Display this menu."
+	echo -e "   --list -l  Lists nodes on LAN with open ssh ports."
+	echo -e "   --menu -m  Select remote IP from menu of all available IPs."
+	echo -e "   --src -s   Path to directory from which files will be synced."
+	echo -e "   --dst -d   Path from directory to which files will be synced."
+	echo -e ""
+	exit 2
+}
+
+TARGET_SRC=~/safe
+TARGET_DST=~/
+MENU=false
+LIST=false
+
+PARSED_ARGUMENTS=$(getopt -a -n $0 -o hlms:d: --long help,list,menu,src:,dst: -- "$@")
+VALID_ARGUMENTS=$?
+if [ "$VALID_ARGUMENTS" != "0" ]; then 
+	echo -e ""; usage 
+fi
+
+eval set -- "$PARSED_ARGUMENTS"
+
+while :
+do
+  case "$1" in
+    -h | --help)    usage					  ;;
+    -l | --list)    LIST=true		; shift   ;;
+    -m | --menu)	MENU=true		; shift	  ;;
+	-s | --src)		TARGET_SRC="$2" ; shift 2 ;;
+    -d | --dst)		TARGET_DST="$2" ; shift 2 ;;
+    --) shift; break ;;
+    *) echo "Unexpected option: $1"
+       echo -e ""; usage ;;
+  esac
+done
+
+if [ ! ${@: -1} = push ] && [ ! ${@: -1} = pull ] && [ $LIST = false ]; then
+	echo -e "$0: missing operand.\n"; usage
+fi
+
+echo -n "Searching LAN for open ssh ports..."
+NMAP_OUT=`nmap -p 22 -oG - 192.168.0.0/24 | grep open; rc=${?}; echo extra; exit ${rc}`
+LOCAL_IP=`ip -4 addr | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v 127`
+# filter out local IP address
+REMOTE_IPS=`echo -n "${NMAP_OUT%extra}" | grep -v $LOCAL_IP | awk '{print $2}'`
+
+# split REMOTE_IPS multi-line string into list
+SAVEIFS=$IFS; IFS=$'\n'; REMOTE_IPS=($REMOTE_IPS); IFS=$SAVEIFS   
+echo " done!"
+
+if [ ! $REMOTE_IPS ]; then
+	echo "Couldn't find anything. Are you sure ssh is enabled on the remote machine?"
+	exit
+fi
+
+if [ $LIST = true ]; then
+	echo -e ""
+	echo -e $REMOTE_IPS
+	echo -e ""
+	exit
+elif [ $MENU = true ]; then
+	echo ""
+	PS3="Select remote: "
+	select ip in "${REMOTE_IPS[@]}"; do
+		REMOTE=$ip; break
+	done
+else
+	REMOTE=${REMOTE_IPS[0]}
+fi
+
+if [ ${@: -1} = pull ]; then SRC=$REMOTE:$TARGET_SRC; DST=$TARGET_DST
+elif [ ${@: -1} = push ]; then SRC=$TARGET_SRC DST=$REMOTE:$TARGET_DST
+else usage
+fi
+
+DIV="**************************"
+dry_run() { rsync -avn --exclude env --delete $SRC $DST; }
+run()	  { rsync -av --exclude env --delete $SRC $DST; }
+
+echo "$DIV"
+dry_run
+echo ""
+echo "$DIV"
+
+echo -n "Do you wish to commit to these changes (y/n)? "
+while true; do
+	read answer
+	echo ""
+	if [ "$answer" != "${answer#[Yy]}" ]; then
+		echo "$DIV"
+		run 
+		echo ""
+		echo "$DIV"
+		echo -e "done!"; break
+	elif [ "$answer" != "${answer#[Nn]}" ]; then
+        echo "No changes committed."; break
+	else
+        echo -n "Please answer yes or no. (y/n) "
+	fi
+done
