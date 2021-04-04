@@ -9,6 +9,7 @@ usage() {
 	echo -e "on the same network."
 	echo -e ""
 	echo -e "Usage: homesync [ --help | -h ] [ --list -l ] [ --menu | -m ]"
+	echo -e "                [ --exclude | -e ] filename_to_exclude"
 	echo -e "                [ --src | -s ] source_path_to_file"
 	echo -e "                [ --dst | -d ] destination_path"
 	echo -e ""
@@ -30,6 +31,7 @@ TARGET_SRC=~/safe
 TARGET_DST=~/
 MENU=false
 LIST=false
+EXCLUSIONS=""
 
 PARSED_ARGUMENTS=$(getopt -a -n $0 -o hlms:d: --long help,list,menu,src:,dst: -- "$@")
 VALID_ARGUMENTS=$?
@@ -45,6 +47,7 @@ do
     -h | --help)    usage					  ;;
     -l | --list)    LIST=true		; shift   ;;
     -m | --menu)	MENU=true		; shift	  ;;
+	-e | --exclude)	EXCLUSIONS="$2" ; shift 2 ;;
 	-s | --src)		TARGET_SRC="$2" ; shift 2 ;;
     -d | --dst)		TARGET_DST="$2" ; shift 2 ;;
     --) shift; break ;;
@@ -93,8 +96,8 @@ else usage
 fi
 
 DIV="**************************"
-dry_run() { rsync -avn --exclude env --delete $SRC $DST; }
-run()	  { rsync -av --exclude env --delete $SRC $DST; }
+dry_run() { rsync -avn --exclude env $EXCLUSIONS --delete $SRC $DST; }
+run()	  { rsync -av --exclude env $EXCLUSIONS --delete $SRC $DST; }
 
 echo "$DIV"
 dry_run
