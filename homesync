@@ -9,7 +9,7 @@ usage() {
 	echo -e "on the same network."
 	echo -e ""
 	echo -e "Usage: homesync [ --help | -h ] [ --list -l ] [ --menu | -m ]"
-	echo -e "                [ --exclude | -e ] filename_to_exclude"
+	echo -e "                [ --exc | -e ] filename_to_exclude"
 	echo -e "                [ --src | -s ] source_path_to_file"
 	echo -e "                [ --dst | -d ] destination_path"
 	echo -e ""
@@ -23,6 +23,7 @@ usage() {
 	echo -e "   --menu -m  Select remote IP from menu of all available IPs."
 	echo -e "   --src -s   Path to directory from which files will be synced."
 	echo -e "   --dst -d   Path from directory to which files will be synced."
+	echo -e "   --exc -e   Filenames to be ignored and not synced."
 	echo -e ""
 	exit 2
 }
@@ -33,7 +34,7 @@ MENU=false
 LIST=false
 EXCLUSIONS=""
 
-PARSED_ARGUMENTS=$(getopt -a -n $0 -o hlms:d: --long help,list,menu,src:,dst: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n $0 -o hlme:s:d: --long help,list,menu,exc:src:,dst: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then 
 	echo -e ""; usage 
@@ -47,7 +48,7 @@ do
     -h | --help)    usage					  ;;
     -l | --list)    LIST=true		; shift   ;;
     -m | --menu)	MENU=true		; shift	  ;;
-	-e | --exclude)	EXCLUSIONS="$2" ; shift 2 ;;
+	-e | --exc)	EXCLUSIONS="$2" ; shift 2 ;;
 	-s | --src)		TARGET_SRC="$2" ; shift 2 ;;
     -d | --dst)		TARGET_DST="$2" ; shift 2 ;;
     --) shift; break ;;
