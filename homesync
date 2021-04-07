@@ -97,8 +97,8 @@ else usage
 fi
 
 DIV="**************************"
-dry_run() { rsync -avn --exclude env $EXCLUSIONS --delete $SRC $DST; }
-run()	  { rsync -av --exclude env $EXCLUSIONS --delete $SRC $DST; }
+dry_run() { rsync -avn --exclude $EXCLUSIONS --delete $SRC $DST; }
+run()	  { rsync -av --exclude $EXCLUSIONS --delete $SRC $DST; }
 
 echo "$DIV"
 dry_run
