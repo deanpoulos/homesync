@@ -2,6 +2,10 @@
 
 - [ ] Add config file
 - [ ] Add man page
+- [ ] Add multiple exclude directories option
+- [ ] Separate home from sync
+- [ ] Add "space" command for "pulling/pushing" workspaces using bspc wm --dump-state
+- [ ] Add "shell" command for remotely executing commands
 
 # Description
 
