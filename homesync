@@ -24,6 +24,7 @@ usage() {
 	echo -e "   --src -s   Path to directory from which files will be synced."
 	echo -e "   --dst -d   Path from directory to which files will be synced."
 	echo -e "   --exc -e   Filenames to be ignored and not synced."
+	echo -e "   --nodel    Don't delete items when pushing/pulling."
 	echo -e ""
 	exit 2
 }
@@ -33,8 +34,9 @@ TARGET_DST=~/
 MENU=false
 LIST=false
 EXCLUSIONS=""
+NO_DELETE=false
 
-PARSED_ARGUMENTS=$(getopt -a -n $0 -o hlme:s:d: --long help,list,menu,exc:src:,dst: -- "$@")
+PARSED_ARGUMENTS=$(getopt -a -n $0 -o hlme:s:d: --long help,list,menu,exc:src:,dst:,nodel -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then 
 	echo -e ""; usage 
@@ -48,9 +50,10 @@ do
     -h | --help)    usage					  ;;
     -l | --list)    LIST=true		; shift   ;;
     -m | --menu)	MENU=true		; shift	  ;;
-	-e | --exc)	EXCLUSIONS="$2" ; shift 2 ;;
+	-e | --exc)		EXCLUSIONS="$2" ; shift 2 ;;
 	-s | --src)		TARGET_SRC="$2" ; shift 2 ;;
     -d | --dst)		TARGET_DST="$2" ; shift 2 ;;
+       --nodel)		NO_DELETE=true  ; shift   ;;
     --) shift; break ;;
     *) echo "Unexpected option: $1"
        echo -e ""; usage ;;
@@ -96,9 +99,15 @@ elif [ ${@: -1} = push ]; then SRC=$TARGET_SRC DST=$REMOTE:$TARGET_DST
 else usage
 fi
 
+if [ $NO_DELETE = true ]; then
+	DEL_ARG=""
+else
+	DEL_ARG="--delete"
+fi
+
 DIV="**************************"
-dry_run() { rsync -avn --exclude $EXCLUSIONS --delete $SRC $DST; }
-run()	  { rsync -av --exclude $EXCLUSIONS --delete $SRC $DST; }
+dry_run() { rsync -avn --exclude $EXCLUSIONS $DEL_ARG $SRC $DST; }
+run()	  { rsync -av --exclude $EXCLUSIONS $DEL_ARG $SRC $DST; }
 
 echo "$DIV"
 dry_run
